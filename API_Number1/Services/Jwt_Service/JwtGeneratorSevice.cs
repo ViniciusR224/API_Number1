@@ -36,7 +36,7 @@ namespace API_Number1.Services.Jwt_Service
                 Audience = Configuration["Jwt:Audience"],
                 IssuedAt = DateTime.UtcNow,
                 NotBefore = DateTime.UtcNow,
-                Expires = DateTime.UtcNow.AddMinutes(2),
+                Expires = DateTime.UtcNow.AddMinutes(30),
                 SigningCredentials = SigningCredentials,
                 Subject = new ClaimsIdentity(claims)
             };

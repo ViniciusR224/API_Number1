@@ -24,7 +24,6 @@
 
   <ItemGroup>
     <Folder Include="Filters\AuthorizationFilters\" />
-    <Folder Include="Middlewares\" />
   </ItemGroup>
 
 </Project>

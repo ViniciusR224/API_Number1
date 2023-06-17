@@ -15,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using Newtonsoft.Json.Linq;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Diagnostics;
 
 namespace API_Number1.Controllers
 {
@@ -93,6 +94,20 @@ namespace API_Number1.Controllers
             return Results.CreatedAtRoute("User", "Criado com sucesso");
 
         }
+        [HttpPost]
+        [Route("Login")]
+        public async Task<IResult> LoginUser([FromBody] SignIn @in)
+        {
+            throw new Exception("Teste");
+            var user = await _UserRepository.GetEntityById(@in.Id);
+            var result = _passwordHasher.VerifyPassword(@in.Password, user.PasswordHash, user.PasswordSalt);
+            if (!result)
+            {
+                return Results.BadRequest("Senha incorreta");
+            }
+            var jwt=_jwtService.GenerateToken(user);
+            return Results.Ok(jwt);
+        }
         [Authorize(Roles = "Administrator")]
         [HttpPut]//Acho que só o admin iria acessar o put, já que o user não conseguiria alterar todas as informações, tipo categoryId, etc...       
         [Route("{UserId}/User")]
@@ -110,6 +125,7 @@ namespace API_Number1.Controllers
                 PasswordSalt = salt
 
             };
+            
             await _UserRepository.UpdateEntity(UserId, user);
             return Results.Ok(user);
         }
@@ -125,7 +141,7 @@ namespace API_Number1.Controllers
             //Lendo o jwt em si, no caso o payload será lido também
             var JwtInfo = tokenHandler.ReadJwtToken(jwt);
 
-            var UserIdClaim = JwtInfo.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var UserIdClaim =  JwtInfo.Claims.FirstOrDefault(c => c.Type =="nameid");
             //Lembre-se que o claim tem a Key e Value, logo passar somente UserIdClaim não funciona
             var UserId = Guid.Parse(UserIdClaim.Value);
 

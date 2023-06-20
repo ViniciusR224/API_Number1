@@ -49,7 +49,7 @@ namespace API_Number1.Repositories.User_Repository
 
         public async Task<User> GetEntityById(Guid id)
         {
-            var entity=await RepostoryBase.GetEntityById(id);
+            var entity=await RepostoryBase.GetEntityById(id);           
             return entity;
         }
 
@@ -68,7 +68,7 @@ namespace API_Number1.Repositories.User_Repository
         public async Task<User> UpdateEntityProperties(Guid id, JsonPatchDocument<User> jsonPatchDocument)
         {
             //Criando uma lista que aceita Operation em si - Se tiver duvidas de como é essa operation vá para a "Definição. 
-            //public List<Operation<TModel>> Operations { get; private set; } Lembre que o JsonPatchDocument Tem essa propriedade de List, 
+            //public List<Operation<TModel>> Operations { get; private set; }. Lembre que o JsonPatchDocument tem essa propriedade de List, 
             //logo você pode fazer coisas assim
             List<Microsoft.AspNetCore.JsonPatch.Operations.Operation<User>> RemoveOperations = new List<Microsoft.AspNetCore.JsonPatch.Operations.Operation<User>>();
             foreach (var operation in jsonPatchDocument.Operations)

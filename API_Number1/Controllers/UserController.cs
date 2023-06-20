@@ -16,12 +16,14 @@ using System.IdentityModel.Tokens.Jwt;
 using Newtonsoft.Json.Linq;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Cors;
 
 namespace API_Number1.Controllers
 {
 
     [ApiController]
     [Route("/[controller]")]
+    
     public class UserController : ControllerBase
     {
         protected IServiceBase _factoryBase { get; set; }
@@ -73,7 +75,7 @@ namespace API_Number1.Controllers
             return Results.Ok(ListResponse);
 
         }
-
+        [AllowAnonymous]
         [HttpPost]
         [Route("User")]
         public async Task<IResult> CreateUser([FromBody] UserRequestCreate userRequest)
@@ -94,11 +96,12 @@ namespace API_Number1.Controllers
             return Results.CreatedAtRoute("User", "Criado com sucesso");
 
         }
+        [AllowAnonymous]
         [HttpPost]
-        [Route("Login")]
+        [Route("Login")]       
         public async Task<IResult> LoginUser([FromBody] SignIn @in)
         {
-            throw new Exception("Teste");
+            
             var user = await _UserRepository.GetEntityById(@in.Id);
             var result = _passwordHasher.VerifyPassword(@in.Password, user.PasswordHash, user.PasswordSalt);
             if (!result)
@@ -134,7 +137,7 @@ namespace API_Number1.Controllers
         [Route("/User")]
         public async Task<IResult> EditEntity([FromBody] JsonPatchDocument<User> jsonPatchDocument)
         {
-            //Obtendo o token jwt - Aquele replacer é porque só quero o JWT, logo retirei o Bearer que vem junto
+            //Obtendo o token jwt - Aquele replacer é porque só quero o JWT, logo irei retirar o "Bearer" que vem junto
             var jwt = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
             //Manipular o jwt
             var tokenHandler = new JwtSecurityTokenHandler();

@@ -7,10 +7,7 @@ namespace API_Number1.Middlewares
 {
     public class ExceptionMiddleware : IMiddleware
     {
-        public ExceptionMiddleware()
-        {
-            
-        }
+        
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
 			try
@@ -24,10 +21,11 @@ namespace API_Number1.Middlewares
 				context.Response.Headers.ContentType = "application/json";
 				ProblemDetails details = new()
 				{
+					
 					Status = (int)HttpStatusCode.InternalServerError,
 					Title = e.Message,
 					Instance = e.InnerException?.Message,
-					Detail = "Mensagem Padrão de Exception",
+					Detail = "Mensagem Padrão de Exception GL",
 					Type = "Server Error",
 				};
 				var json = JsonConvert.SerializeObject(details);

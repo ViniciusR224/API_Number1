@@ -9,6 +9,7 @@
 
         public UserRequestCreate(string name, string email,string Password,Guid CategoryId)
         {
+            
             Name = name;
             Email = email;
             this.Password = Password;

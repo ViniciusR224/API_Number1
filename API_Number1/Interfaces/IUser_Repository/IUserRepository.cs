@@ -29,6 +29,13 @@ namespace API_Number1.Interfaces.IUser_Repository
         /// <returns>Todas as entidades obtidas.</returns>
         Task<IEnumerable<User>> GetAllEntities();
 
+        /// <summary>
+        /// Obtém entidade pelo email
+        /// </summary>
+        /// <param name="email">O email da entidade a ser obtida</param>
+        /// <returns>A entidade obtida pelo email</returns>
+        Task<User> GetUserByEmail(string email);
+
         //POSTs
         /// <summary>
         /// Cria uma nova entidade.

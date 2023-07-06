@@ -5,7 +5,8 @@ namespace API_Number1.Models
 {
     public class User:Entity
     {
-       
+
+        
         [Required]
         public string Email { get; set; }
         

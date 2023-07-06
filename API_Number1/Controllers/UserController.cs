@@ -17,46 +17,51 @@ using Newtonsoft.Json.Linq;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Cors;
+using FluentValidation;
+using System.Linq;
+using Microsoft.AspNetCore.SignalR;
+using System.Reflection.Metadata.Ecma335;
+using System.ComponentModel.DataAnnotations;
+using MySqlX.XDevAPI.Common;
+using FluentValidation.Results;
+using API_Number1.Interfaces.IAuthenticationProcess;
+using API_Number1.Interfaces.IADM_Service;
+using API_Number1.Interfaces.IUserService;
 
 namespace API_Number1.Controllers
 {
 
-    [ApiController]
+    [ApiController]//Adiciona o binding e validação do modelstate automáticos,logo você não precisa especificar [FromBody] [FromRoute] etc...
     [Route("/[controller]")]
-    
     public class UserController : ControllerBase
     {
-        protected IServiceBase _factoryBase { get; set; }
-        protected IUserRepository _UserRepository { get; set; }
-        protected IPasswordHasher _passwordHasher { get; set; }
-        protected IJwtService _jwtService { get; set; }
-        protected ApplicationDbContext DbContext { get; set; }
+        protected readonly IAdm_Service adm_Service;
         protected ILogger<User> logger1 { get; set; }
-        public UserController(IServiceBase factoryBase, ApplicationDbContext context, ILogger<User> logger)
+        public IValidator<SignUpRequest> SignUpValidator { get; }
+        protected IUser_Service _User_Service { get; }
+
+        public UserController(ILogger<User> logger,IValidator<SignUpRequest> validator,IUser_Service user_Service)
         {
-            _factoryBase = factoryBase;
-            _UserRepository = _factoryBase.CreateUserInterface();
-            _passwordHasher = _factoryBase.CreateAuthenticationUserInterface();
-            _jwtService = _factoryBase.CreateJwtService();
             logger1 = logger;
-            DbContext = context;
+            SignUpValidator = validator;
+            _User_Service = user_Service;
         }
+
         [Authorize(Roles = "Administrator")]
         [HttpGet]
         [Route("{userId}/User")]
-        public async Task<IResult> GetUserById([FromRoute] Guid userId)
+        public async Task<IResult> GetUserById(Guid userId)
         {
-            var entity = await _UserRepository.GetEntityById(userId);
+            var entity=await adm_Service.GetUserById(userId);
             UserResponse userResponse = (UserResponse)entity;
             return Results.Ok(userResponse);
-
         }
         [Authorize]
         [HttpGet]
         [Route("{userName}/Users")]
-        public async Task<IResult> GetUserByName([FromRoute] string userName)
+        public async Task<IResult> GetUserByName(string userName)
         {
-            var entity = await _UserRepository.GetEntityByName(userName);
+            var entity = await _User_Service.GetUserByName(userName);
             UserResponse userResponse = (UserResponse)entity;
             return Results.Ok(userResponse);
         }
@@ -65,7 +70,7 @@ namespace API_Number1.Controllers
         [Route("Users")]
         public async Task<IResult> GetAllUsers()
         {
-            var UsersList = await _UserRepository.GetAllEntities();
+            var UsersList = await adm_Service.GetAllUsers();
             List<UserResponse> ListResponse = new List<UserResponse>();
             foreach (var user in UsersList)
             {
@@ -73,85 +78,87 @@ namespace API_Number1.Controllers
                 ListResponse.Add(UserResponse);
             };
             return Results.Ok(ListResponse);
-
         }
         [AllowAnonymous]
         [HttpPost]
         [Route("User")]
-        public async Task<IResult> CreateUser([FromBody] UserRequestCreate userRequest)
+        public async Task<IResult> CreateUserEntity(SignUpRequest userRequest)
         {
-            var passwordHash = _passwordHasher.HashPassword(userRequest.Password, out var salt);
-            var user = new User()
+            //Lembrar de refatorar e adicionar em um filtro a questão das validações
+            var ValidationResult = await SignUpValidator.ValidateAsync(userRequest);
+            if (!ValidationResult.IsValid)
             {
-                Name = userRequest.Name,
-                Email = userRequest.Email,
-                CategoryId = userRequest.CategoryId,
-                PasswordHash = passwordHash,
-                PasswordSalt = salt
-
-            };
-            await _UserRepository.CreateEntity(user);
-            DbContext.SaveChanges();
-
-            return Results.CreatedAtRoute("User", "Criado com sucesso");
+                return ValidationProblems(ValidationResult);
+            }
+            var entity = await _User_Service.CreateUserEntity(userRequest);
+            return Results.Ok("Criado com sucesso");
 
         }
+        private IResult ValidationProblems(FluentValidation.Results.ValidationResult validationResult)
+        {
+            return Results.ValidationProblem(validationResult.ToDictionary(),
+                    "A validação falhou por não seguir as regras",
+                    "SignUp", 400,
+                    "Falha na validação",
+                    "Error");
+        }
+
         [AllowAnonymous]
         [HttpPost]
-        [Route("Login")]       
-        public async Task<IResult> LoginUser([FromBody] SignIn @in)
+        [Route("Login")]
+        public async Task<IResult> LoginUser(SignInRequest @in)
         {
-            
-            var user = await _UserRepository.GetEntityById(@in.Id);
-            var result = _passwordHasher.VerifyPassword(@in.Password, user.PasswordHash, user.PasswordSalt);
-            if (!result)
-            {
-                return Results.BadRequest("Senha incorreta");
-            }
-            var jwt=_jwtService.GenerateToken(user);
-            return Results.Ok(jwt);
+            var Result= await _User_Service.LoginUser(@in);
+            return Result;
         }
+
         [Authorize(Roles = "Administrator")]
         [HttpPut]//Acho que só o admin iria acessar o put, já que o user não conseguiria alterar todas as informações, tipo categoryId, etc...       
         [Route("{UserId}/User")]
-        public async Task<IResult> UpdateEntity(Guid UserId, UserEditRequest userRequest)
+        public async Task<IResult> UpdateEntity(Guid UserId, ModifyingUserRequest userRequest)
         {
-
-
-            var password = _passwordHasher.HashPassword(userRequest.Password, out var salt);
-            var user = new User
-            {
-                Name = userRequest.Name,
-                Email = userRequest.Email,
-                CategoryId = userRequest.CategoryId,
-                PasswordHash = password,
-                PasswordSalt = salt
-
-            };
-            
-            await _UserRepository.UpdateEntity(UserId, user);
-            return Results.Ok(user);
+            var entity=await adm_Service.UpdateEntity(UserId, userRequest);
+            return Results.Ok(entity);
         }
+
         [Authorize]
         [HttpPatch]
         [Route("/User")]
-        public async Task<IResult> EditEntity([FromBody] JsonPatchDocument<User> jsonPatchDocument)
+        public async Task<IResult> EditEntity(JsonPatchDocument<User> jsonPatchDocument)
         {
+            var UserId = GetUserIdInJwt();
+
+            //Dentro do método terá todas as verificaçãoes necessárias
+            var result = await _User_Service.EditEntity(UserId, jsonPatchDocument);
+
+            return result;
+        }
+        [Authorize]
+        [HttpDelete]
+        [Route("Resources")]
+        public async Task<IResult> DeleteEntityById()
+        {
+            //Pegar um claim especifico no jwt
+            var UserId= GetUserIdInJwt();
+            return await _User_Service.DeleteEntity(UserId);
+        }
+        private Guid GetUserIdInJwt()
+        {
+            //Colocar dentro do Service ou em um método no controller, por enquanto pelo menos
+
             //Obtendo o token jwt - Aquele replacer é porque só quero o JWT, logo irei retirar o "Bearer" que vem junto
-            var jwt = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var jwt = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", string.Empty);
             //Manipular o jwt
             var tokenHandler = new JwtSecurityTokenHandler();
             //Lendo o jwt em si, no caso o payload será lido também
             var JwtInfo = tokenHandler.ReadJwtToken(jwt);
+            
+            var UserIdClaim = JwtInfo.Claims.FirstOrDefault(c => c.Type == "nameid");
 
-            var UserIdClaim =  JwtInfo.Claims.FirstOrDefault(c => c.Type =="nameid");
             //Lembre-se que o claim tem a Key e Value, logo passar somente UserIdClaim não funciona
+
             var UserId = Guid.Parse(UserIdClaim.Value);
-
-            //Dentro do método terá todas as verificaçãoes necessárias
-            var entity = (UserResponse)await _UserRepository.UpdateEntityProperties(UserId, jsonPatchDocument);
-
-            return Results.Ok("/User");
+            return UserId;
         }
     }
 }

@@ -2,6 +2,7 @@
 using API_Number1.Interfaces.IRepository_Base;
 using API_Number1.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 
@@ -40,6 +41,12 @@ namespace API_Number1.Repositories.Repository_Base
             return AllEntitys;
         }
 
+        public async Task<TEntity> GetEntityByEmail(string email)
+        {
+            var entity=await _entities.FindAsync(email);
+            return entity;
+        }
+
         public async Task<TEntity> GetEntityById(Guid id)
         {
             var entity=await _entities.FindAsync(id);
@@ -58,7 +65,8 @@ namespace API_Number1.Repositories.Repository_Base
             _entities.Entry(entity).CurrentValues.SetValues(NewEntity);
             return NewEntity;
         }
+        
 
-       
+
     }
 }

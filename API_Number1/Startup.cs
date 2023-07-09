@@ -48,7 +48,7 @@ namespace API_Number1
 
     //Talvez colocar tudo em clean architecture e cqrs seguindo o vídeo
     //Refatorar tudo, desde as validações até o processos de cada coisa e a questão da arquitetura também 
-    //Refatorar para tirar os servicços e repositories dos controllers
+    //Refatorar para tirar os servicços e repositories dos controllers - feito 
 
     //Só use o secrets.json se for para o env dev
     public class Startup

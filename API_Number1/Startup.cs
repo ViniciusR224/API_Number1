@@ -30,6 +30,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using API_Number1.Filters;
 using API_Number1.DependencyInjectionConfig;
+using Hellang.Middleware.ProblemDetails;
 
 namespace API_Number1
 {
@@ -72,8 +73,8 @@ namespace API_Number1
                 .AddAuthorizathionAndAuthentication(Configuration);
 
 
-                ////Estou criando uma policy aqui porque fazer no AddAuthorization seria mais para uma situação global, não somente nos controllers
-                ////Fica aqui configurado que todos os usuarios devem estar authenticados para conseguir a authorização de usar os métodos
+               
+                //Fica aqui configurado que todos os usuarios devem estar authenticados para conseguir a authorização de usar os métodos
                 //Services.AddControllers(options =>
                 //{
                 //    var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().RequireRole("User", "Administrator").Build();
@@ -126,7 +127,7 @@ namespace API_Number1
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            
+
             if (env.IsDevelopment())
             {
                 app.UseSwagger();
@@ -177,7 +178,9 @@ namespace API_Number1
             //   });
 
 
-
+            app.UseProblemDetails();
+            
+        
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 

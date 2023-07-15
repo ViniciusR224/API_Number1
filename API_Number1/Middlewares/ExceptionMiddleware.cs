@@ -26,7 +26,7 @@ namespace API_Number1.Middlewares
 					Title = e.Message,
 					Instance = e.InnerException?.Message,
 					Detail = "Mensagem Padrão de Exception GL",
-					Type = "Server Error",
+					Type = "https://httpstatuses.io/500",
 				};
 				var json = JsonConvert.SerializeObject(details);
 				await context.Response.WriteAsync(json);

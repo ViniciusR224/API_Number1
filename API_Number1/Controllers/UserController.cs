@@ -27,6 +27,8 @@ using FluentValidation.Results;
 using API_Number1.Interfaces.IAuthenticationProcess;
 using API_Number1.Interfaces.IADM_Service;
 using API_Number1.Interfaces.IUserService;
+using Microsoft.AspNetCore.JsonPatch.Operations;
+using API_Number1.Validations;
 
 namespace API_Number1.Controllers
 {
@@ -34,17 +36,21 @@ namespace API_Number1.Controllers
     [ApiController]//Adiciona o binding e validação do modelstate automáticos,logo você não precisa especificar [FromBody] [FromRoute] etc...
     [Route("/[controller]")]
     public class UserController : ControllerBase
-    {
-        protected readonly IAdm_Service adm_Service;
-        protected ILogger<User> logger1 { get; set; }
-        public IValidator<SignUpRequest> SignUpValidator { get; }
+    {       
+        protected ILogger<User> logger1 { get; set; }      
         protected IUser_Service _User_Service { get; }
+        protected IAdm_Service adm_Service;
+        public IValidator<SignUpRequest> SignUpValidator { get; }
+        public IValidator<List<Operation<User>>> PatchValidation { get; }
 
-        public UserController(ILogger<User> logger,IValidator<SignUpRequest> validator,IUser_Service user_Service)
+        public UserPatchValidation2 ValidationsPatch = new UserPatchValidation2();
+
+        public UserController(ILogger<User> logger,IValidator<SignUpRequest> validator,IUser_Service user_Service,IValidator<List<Operation<User>>> patchValidation)
         {
             logger1 = logger;
             SignUpValidator = validator;
             _User_Service = user_Service;
+            PatchValidation= patchValidation;                    
         }
 
         [Authorize(Roles = "Administrator")]
@@ -84,6 +90,7 @@ namespace API_Number1.Controllers
         [Route("User")]
         public async Task<IResult> CreateUserEntity(SignUpRequest userRequest)
         {
+            
             //Lembrar de refatorar e adicionar em um filtro a questão das validações
             var ValidationResult = await SignUpValidator.ValidateAsync(userRequest);
             if (!ValidationResult.IsValid)
@@ -121,13 +128,23 @@ namespace API_Number1.Controllers
             return Results.Ok(entity);
         }
 
-        [Authorize]
+        //[Authorize]
         [HttpPatch]
         [Route("/User")]
         public async Task<IResult> EditEntity(JsonPatchDocument<User> jsonPatchDocument)
         {
-            var UserId = GetUserIdInJwt();
+            var validationResult = PatchValidation.Validate(jsonPatchDocument.Operations);
+            if (!validationResult.IsValid)
+            {
+                return Results.BadRequest(validationResult.Errors);
+            }
+            //var validationResult2=ValidationsPatch.ValidationProcess(jsonPatchDocument);
+            //if (!validationResult2.IsValid)
+            //{
+            //    return Results.BadRequest(validationResult2.Errors);
+            //}
 
+            var UserId = GetUserIdInJwt();
             //Dentro do método terá todas as verificaçãoes necessárias
             var result = await _User_Service.EditEntity(UserId, jsonPatchDocument);
 

@@ -18,14 +18,13 @@ namespace API_Number1.Services.User_Service
     public class UserService : IUser_Service
     {
                      
-        protected readonly IAuthentication_Process _ProcessAuthentication;
-        private readonly IUserRepository _userRepository;
+        protected readonly IAuthentication_Process _ProcessAuthentication;        
         protected readonly ISignUpProcess _signUpProcess;
         protected readonly IPatch_Process _patch_Process;
-        public UserService(ISignUpProcess signUpProcess,IAuthentication_Process authentication_Process,IUserRepository userRepository,IPatch_Process patch_Process)
+        protected readonly IUserRepository _userRepository;
+        public UserService(ISignUpProcess signUpProcess,IAuthentication_Process authentication_Process,IPatch_Process patch_Process)
         {
-            _ProcessAuthentication = authentication_Process;
-            _userRepository = userRepository;
+            _ProcessAuthentication = authentication_Process;           
             _signUpProcess = signUpProcess;
             _patch_Process = patch_Process;
         }
@@ -37,9 +36,7 @@ namespace API_Number1.Services.User_Service
 
         public async Task<IResult> EditEntity(Guid Id,JsonPatchDocument<User> jsonPatchDocument)
         {
-            var jsonPatch = _patch_Process.UserPatchProcess(jsonPatchDocument);
-            var entity= (UserResponse)await _userRepository.UpdateEntityProperties(Id, jsonPatch);
-            return Results.Ok($"{entity}" + "Atualizado com sucesso");
+            return await _patch_Process.UserPatchProcess(Id, jsonPatchDocument);
         }
 
         

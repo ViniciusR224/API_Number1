@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Xml.Serialization;
+using static System.Net.WebRequestMethods;
 
 namespace API_Number1.Filters
 {
@@ -39,7 +40,7 @@ namespace API_Number1.Filters
                 Status = (int)HttpStatusCode.InternalServerError,
                 Detail = $"{ex.Message}+{ex.StackTrace}",
                 Instance = ex.Source,
-                Type = ex.InnerException?.Message,
+                Type = "https://httpstatuses.io/500"
             };
 
             return problemDetails;

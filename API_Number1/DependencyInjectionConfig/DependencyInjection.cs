@@ -117,7 +117,7 @@ namespace API_Number1.DependencyInjectionConfig
 
 
             Services.AddScoped<IValidator<SignUpRequest>, SignUpValidation>();
-            Services.AddScoped<IValidator<List<Operation<User>>>, UserPatchValidation>();
+            Services.AddScoped<IUserPatchValidation, UserPatchValidation2>();
             
 
             Services.AddScoped<IPasswordHasher, PasswordHasherService>();

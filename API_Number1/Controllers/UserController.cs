@@ -40,17 +40,16 @@ namespace API_Number1.Controllers
         protected ILogger<User> logger1 { get; set; }      
         protected IUser_Service _User_Service { get; }
         protected IAdm_Service adm_Service;
-        public IValidator<SignUpRequest> SignUpValidator { get; }
-        public IValidator<List<Operation<User>>> PatchValidation { get; }
+        public IValidator<SignUpRequest> SignUpValidator { get; }      
+        protected IUserPatchValidation _PatchValidation { get; }
+        
 
-        public UserPatchValidation2 ValidationsPatch = new UserPatchValidation2();
-
-        public UserController(ILogger<User> logger,IValidator<SignUpRequest> validator,IUser_Service user_Service,IValidator<List<Operation<User>>> patchValidation)
+        public UserController(ILogger<User> logger,IValidator<SignUpRequest> validator,IUser_Service user_Service,IUserPatchValidation userPatchValidation)
         {
             logger1 = logger;
             SignUpValidator = validator;
             _User_Service = user_Service;
-            PatchValidation= patchValidation;                    
+            _PatchValidation = userPatchValidation;                   
         }
 
         [Authorize(Roles = "Administrator")]
@@ -133,22 +132,18 @@ namespace API_Number1.Controllers
         [Route("/User")]
         public async Task<IResult> EditEntity(JsonPatchDocument<User> jsonPatchDocument)
         {
-            var validationResult = PatchValidation.Validate(jsonPatchDocument.Operations);
-            if (!validationResult.IsValid)
+            var result=_PatchValidation.PatchResultProcess(jsonPatchDocument);
+            if (!result.IsValid)
             {
-                return Results.BadRequest(validationResult.Errors);
+                return Results.BadRequest(result._errorsValidation);
             }
-            //var validationResult2=ValidationsPatch.ValidationProcess(jsonPatchDocument);
-            //if (!validationResult2.IsValid)
-            //{
-            //    return Results.BadRequest(validationResult2.Errors);
-            //}
+           
 
             var UserId = GetUserIdInJwt();
             //Dentro do método terá todas as verificaçãoes necessárias
-            var result = await _User_Service.EditEntity(UserId, jsonPatchDocument);
+            var EditResult = await _User_Service.EditEntity(UserId, jsonPatchDocument);
 
-            return result;
+            return EditResult;
         }
         [Authorize]
         [HttpDelete]

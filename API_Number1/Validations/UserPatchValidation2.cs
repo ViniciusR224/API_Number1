@@ -24,10 +24,6 @@ public interface IUserPatchValidation
 public class UserPatchValidation2 : IUserPatchValidation
 {
     private List<string> CaminhosValidos = new List<string> { "Name", "Email", "Password" };   
-    
-    
-
-
     public ValidationPatchResult PatchResultProcess(JsonPatchDocument<User> jsonPatchDocument)
     {
         var validationErrors = ValidationProcess(jsonPatchDocument);

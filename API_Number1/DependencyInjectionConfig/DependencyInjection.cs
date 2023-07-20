@@ -175,7 +175,7 @@ namespace API_Number1.DependencyInjectionConfig
         }
         public static void ConfigureTokenValidation(JwtBearerOptions options, IConfiguration Configuration)
         {
-            var issuer = Configuration.GetSection("Jwt:Issuer").Value;
+            
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,

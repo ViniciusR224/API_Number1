@@ -18,13 +18,13 @@ namespace API_Number1.Validations;
 //E tudo dividido certinho, fornique sim.
 public interface IUserPatchValidation
 {
-    ValidationPatchResult PatchResultProcess(JsonPatchDocument<User> jsonPatchDocument);
+    ValidationPatchResult PatchResult(JsonPatchDocument<User> jsonPatchDocument);
     
 }
 public class UserPatchValidation2 : IUserPatchValidation
 {
     private List<string> CaminhosValidos = new List<string> { "Name", "Email", "Password" };   
-    public ValidationPatchResult PatchResultProcess(JsonPatchDocument<User> jsonPatchDocument)
+    public ValidationPatchResult PatchResult(JsonPatchDocument<User> jsonPatchDocument)
     {
         var validationErrors = ValidationProcess(jsonPatchDocument);
         if(validationErrors.Count > 0)

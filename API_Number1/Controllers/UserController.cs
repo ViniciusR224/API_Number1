@@ -132,7 +132,7 @@ namespace API_Number1.Controllers
         [Route("/User")]
         public async Task<IResult> EditEntity(JsonPatchDocument<User> jsonPatchDocument)
         {
-            var result=_PatchValidation.PatchResultProcess(jsonPatchDocument);
+            var result=_PatchValidation.PatchResult(jsonPatchDocument);
             if (!result.IsValid)
             {
                 return Results.BadRequest(result._errorsValidation);

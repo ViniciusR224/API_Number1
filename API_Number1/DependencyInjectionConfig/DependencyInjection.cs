@@ -13,6 +13,7 @@ using API_Number1.Interfaces.IUser_Repository;
 using API_Number1.Interfaces.IUserService;
 using API_Number1.Interfaces.ValidationInterfaces;
 using API_Number1.Middlewares;
+using API_Number1.Models;
 using API_Number1.Repositories.Repository_Base;
 using API_Number1.Repositories.User_Repository;
 using API_Number1.Repositories.Validation_Repository;
@@ -26,10 +27,13 @@ using API_Number1.Services.SignUpProcessService;
 using API_Number1.Services.User_Service;
 using API_Number1.Validations;
 using FluentValidation;
+using Hellang.Middleware.ProblemDetails;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors.Infrastructure;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.JsonPatch.Operations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -84,17 +88,17 @@ namespace API_Number1.DependencyInjectionConfig
         {
             ////Estou criando uma policy aqui porque fazer no AddAuthorization seria mais para uma situação global, não somente nos controllers
             ////Fica aqui configurado que todos os usuarios devem estar authenticados para conseguir a authorização de usar os métodos
-            var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().RequireRole("User", "Administrator").Build();
+            //var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().RequireRole("User", "Administrator").Build();
+            //options.Filters.Add(new AuthorizeFilter(policy));
+            
             //Exceptions nivel controller
-
-            options.Filters.Add(new AuthorizeFilter(policy));
-            options.Filters.Add<ExceptionFilterController>();
+            //options.Filters.Add<ExceptionFilterController>();
         }
-        
-        
-        
-        
-        
+
+
+
+
+
         public static IServiceCollection AddDbContextConfiguration(this IServiceCollection Services, IConfiguration Configuration)
         {
             Services.AddDbContext<ApplicationDbContext>(options =>
@@ -111,10 +115,14 @@ namespace API_Number1.DependencyInjectionConfig
             Services.AddScoped<IUserRepository, UserRepository>();
             Services.AddScoped(typeof(IValidationRepository<>), typeof(ValidationRepository<>));
 
+
+            Services.AddScoped<IValidator<SignUpRequest>, SignUpValidation>();
+            Services.AddScoped<IUserPatchValidation, UserPatchValidation2>();
+            
+
             Services.AddScoped<IPasswordHasher, PasswordHasherService>();
             Services.AddScoped<IServiceBase, BaseService>();
-            Services.AddScoped<IJwtService, JwtGeneratorSevice>();            
-            Services.AddScoped<IValidator<SignUpRequest>, SignUpValidation>();
+            Services.AddScoped<IJwtService, JwtGeneratorSevice>();                        
             Services.AddScoped<IAuthentication_Process, AuthenticationProcess>();
             Services.AddScoped<IPatch_Process, PatchProcess>();
             Services.AddScoped<IUser_Service, UserService>();
@@ -125,9 +133,21 @@ namespace API_Number1.DependencyInjectionConfig
             Services.AddScoped<ISignUpProcess, SignUpProcess>();
             Services.AddScoped<IAuthentication_Process, AuthenticationProcess>();
 
-            Services.AddTransient<ExceptionMiddleware>();
+            //Services.AddTransient<ExceptionMiddleware>();
 
-            
+            //Middleware de Exception.
+            Services.AddProblemDetails(options =>
+            {
+                //Se você quer explorar os opções vá nas definições do ProblemDetailsOptions, lá tem todas.
+                options.TraceIdPropertyName = "Observability Id";
+                //Como o nome diz, aqui será feita uma verificação para determinar se a exception details será colocada no no response               
+                options.IncludeExceptionDetails = (Ctx, ex) =>
+                {
+                    var env = Ctx.RequestServices.GetRequiredService<IHostEnvironment>();
+                    return env.IsEnvironment("Development");
+                };
+            });
+
             return Services;
         }
 
@@ -155,7 +175,7 @@ namespace API_Number1.DependencyInjectionConfig
         }
         public static void ConfigureTokenValidation(JwtBearerOptions options, IConfiguration Configuration)
         {
-            var issuer = Configuration.GetSection("Jwt:Issuer").Value;
+            
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,

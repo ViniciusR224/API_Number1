@@ -5,7 +5,7 @@ namespace API_Number1.Interfaces.IPatchProcess
 {
     public interface IPatch_Process
     {
-        JsonPatchDocument<User> UserPatchProcess(JsonPatchDocument<User> jsonPatchDocument);
+       Task<IResult> UserPatchProcess(Guid id,JsonPatchDocument<User> jsonPatchDocument);
 
     }
 }

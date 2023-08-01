@@ -2,9 +2,6 @@
 using API_Number1.Interfaces.IRepository_Base;
 using API_Number1.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
 
 namespace API_Number1.Repositories.Repository_Base
 {

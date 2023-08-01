@@ -53,6 +53,7 @@ public class UserPatchValidation2 : IUserPatchValidation
             {
                 Path="JsonPatchDocument",
                 _validationFailures=new List<ValidationFailure> { new ValidationFailure("","Número de propriedades não permitida")}
+                //Validation Failure está relacionado ao Results do fluent validation, veja a classe caso tenha duvida
             };
             _errorsValidation.Add(error);          
             return _errorsValidation;
@@ -104,6 +105,7 @@ public class UserPatchValidation2 : IUserPatchValidation
         {
             switch (operation.path)
             {
+                //Após ter passado pelo tipo e caminho da validação, iremos agora validar os valores.
                 case "Name":                   
                     var NameErrors=new NameValidator().Validate(operation.value.ToString()).Errors;
                     if(NameErrors.Count > 0)

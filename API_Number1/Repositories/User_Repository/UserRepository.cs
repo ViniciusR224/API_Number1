@@ -1,16 +1,9 @@
 ﻿using API_Number1.AppDbContext;
-using API_Number1.DTO_S.User_DTO;
-using API_Number1.Interfaces.IJwt_Service;
-using API_Number1.Interfaces.IPatchProcess;
 using API_Number1.Interfaces.IRepository_Base;
 using API_Number1.Interfaces.IUser_Repository;
 using API_Number1.Models;
 using Microsoft.AspNetCore.JsonPatch;
-using Microsoft.AspNetCore.JsonPatch.Operations;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
 
 namespace API_Number1.Repositories.User_Repository
 {
